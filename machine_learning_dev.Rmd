@@ -9,10 +9,11 @@ output:
 
 ```{r}
 library(dplyr)
+library(ggplot2)
 
 ```
 
-# Data reading
+# DATA IMPORT
 
 ```{r}
 marvel <- file.path("data", "marvel-wikia-data.csv") %>%
@@ -23,7 +24,7 @@ dc <-  file.path("data", "dc-wikia-data.csv") %>%
 ```
 
 
-# Data Exploration
+# DATA EXPLORATION
 
 ## Dataset structure
 
@@ -95,7 +96,7 @@ prop.table(ID_SEX_freq, margin = 2)
 ```
 
 
-## Data Manipulation
+## DATA MANIPULATION
 
 ### Create a new column: Mutate
 
@@ -130,4 +131,169 @@ the_bad %>%
 ```
 
 
-# 
+## DATA VISUALIZATION
+
+
+### Histogram
+
+```{r}
+ggplot(data=dc, aes(x = YEAR)) +
+  geom_bar()
+```
+
+
+#### Hist with grouping variable 
+
+```{r}
+ggplot(data=dc, aes(x = YEAR, fill = SEX)) +
+  geom_bar()
+```
+
+
+#### Percent values
+
+```{r}
+
+YEAR_SEX_tab <- dc %>%
+  group_by(YEAR, SEX) %>%
+  summarize(n = n())
+
+margin <- dc %>%
+  group_by(YEAR) %>%
+  summarize(tot = n())
+
+perc_ys <- YEAR_SEX_tab %>%
+  inner_join(margin) %>%
+  mutate(perc = (n/tot)*100)
+
+
+ggplot(data=perc_ys, aes(x = YEAR, y = perc, fill = SEX)) +
+  geom_bar(stat = "identity")
+
+
+```
+
+
+
+### Scatterplot 
+
+
+```{r}
+ggplot(data = dc %>% filter(APPEARANCES<500), aes(x = active_years, y = APPEARANCES)) +
+  geom_point()
+  
+```
+
+
+```{r}
+ggplot(data = dc %>% filter(APPEARANCES<500), aes(x = YEAR, y = log(APPEARANCES), color = ALIVE)) +
+  geom_point()
+```
+
+
+```{r}
+ggplot(data = dc %>% filter(APPEARANCES<500 & APPEARANCES>20), aes(x = YEAR, y = APPEARANCES, color = SEX)) +
+  geom_point()
+```
+
+
+# DATA MODELING
+
+## REGRESSION
+
+### OLS
+
+```{r}
+dc_small <- dc %>%
+  filter(APPEARANCES >20) 
+
+dc %>%
+  ggplot(aes(x = active_years, y = APPEARANCES)) +
+  geom_point()
+
+dc_small %>%
+  ggplot(aes(x = active_years, y = APPEARANCES, col = ID)) +
+  geom_point()
+```
+
+
+
+```{r}
+
+m1 <- lm(data=dc_small, APPEARANCES ~ active_years)
+
+summary(m1)
+
+plot(m1)
+
+```
+
+
+### Y-transform
+
+http://www.cazaar.com/ta/econ113/interpreting-beta
+
+
+```{r}
+dc_small %>%
+  ggplot(aes(x = APPEARANCES)) +
+  geom_bar()
+```
+
+```{r}
+dc_small %>%
+  ggplot(aes(x = log(APPEARANCES))) +
+  geom_bar()
+```
+
+
+
+```{r}
+dc %>%
+  ggplot(aes(x = active_years, y = log(APPEARANCES), col = ID)) +
+  geom_point()
+```
+
+
+```{r}
+
+m2 <- lm(data=dc, log(APPEARANCES) ~ active_years)
+
+summary(m2)
+
+plot(m2)
+
+```
+
+Se aggiungiamo un altro anno di attività, ci aspettiamo che il numero di apparizioni cresca del 3%
+
+### Multiple regression
+
+```{r}
+
+m3 <- lm(data=dc, log(APPEARANCES) ~ active_years + ALIGN)
+
+summary(m3)
+
+plot(m3)
+
+```
+
+Se aggiungiamo un altro anno di attività, ci aspettiamo che il numero di apparizioni cresca del 3%.
+Se il personaggio è cattivo, però, ci aspettiamo un decremento del numero di apparizioni del 17%, mentre se è buono un incremento del 47%.
+
+https://www.youtube.com/watch?v=wXC2kViEGz8
+
+
+
+```{r}
+m4 <- lm(data=dc, log(APPEARANCES) ~ active_years + ALIGN + active_years*ALIGN)
+
+summary(m4)
+
+plot(m4)
+```
+
+
+
+
