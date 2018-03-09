@@ -1,6 +1,133 @@
 ---
 title: "Machine Learning Dev"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
+# Libraries
 
+```{r}
+library(dplyr)
+
+```
+
+# Data reading
+
+```{r}
+marvel <- file.path("data", "marvel-wikia-data.csv") %>%
+  read.csv()
+
+dc <-  file.path("data", "dc-wikia-data.csv") %>%
+  read.csv()
+```
+
+
+# Data Exploration
+
+## Dataset structure
+
+```{r}
+str(dc)
+```
+
+
+## Summary information
+
+```{r}
+summary(dc)
+```
+
+
+## Simple stats
+
+### Range
+
+```{r}
+min(dc$YEAR)
+
+min(dc$YEAR, na.rm = T)
+
+max(dc$YEAR, na.rm = T)
+
+range(dc$YEAR, na.rm = T)
+```
+
+
+### Mean and Sd
+
+```{r}
+mean(dc$APPEARANCES, na.rm = T)
+
+sd(dc$APPEARANCES, na.rm = T)
+```
+
+
+## Frequency tables
+
+### Univariate
+
+```{r}
+table(dc$EYE)
+```
+
+### Bivariate
+
+```{r}
+ID_SEX_freq  <- table(dc$ID, dc$SEX)
+
+ID_SEX_freq
+```
+
+
+```{r}
+margin.table(ID_SEX_freq, margin = 1)
+```
+
+
+
+```{r}
+prop.table(ID_SEX_freq)
+```
+
+```{r}
+prop.table(ID_SEX_freq, margin = 2)
+```
+
+
+## Data Manipulation
+
+### Create a new column: Mutate
+
+```{r}
+max_year <- max(dc$YEAR, na.rm =T)
+
+dc <-  dc %>%
+  mutate(active_years = max_year - YEAR) %>%
+  arrange(desc(active_years))
+  
+```
+
+
+### Subsetting data (rows and columns)
+
+```{r}
+the_bad <- dc %>%
+  filter(ALIGN == "Bad Characters") %>%
+  select(name, ID, SEX, ALIVE, YEAR, APPEARANCES, FIRST.APPEARANCE, active_years)
+
+```
+
+
+### More complex summary stats
+
+```{r}
+the_bad %>%
+  group_by(SEX) %>%
+  summarize(n = n(),
+            avg_appearance = mean(APPEARANCES, na.rm = T),
+            avg_active_year = mean(active_years, na.rm = T))
+```
+
+
+# 
