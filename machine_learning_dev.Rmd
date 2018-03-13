@@ -199,9 +199,9 @@ ggplot(data = dc %>% filter(APPEARANCES<500 & APPEARANCES>20), aes(x = YEAR, y =
 
 # DATA MODELING
 
-## REGRESSION
+## LINEAR REGRESSION
 
-### OLS
+### Simple linear regression
 
 ```{r}
 dc_small <- dc %>%
@@ -229,7 +229,7 @@ plot(m1)
 ```
 
 
-### Y-transform
+### Log-level regression
 
 http://www.cazaar.com/ta/econ113/interpreting-beta
 
@@ -267,7 +267,7 @@ plot(m2)
 
 Se aggiungiamo un altro anno di attività, ci aspettiamo che il numero di apparizioni cresca del 3%
 
-### Multiple regression
+### Multiple linear regression
 
 ```{r}
 
@@ -294,6 +294,32 @@ summary(m4)
 plot(m4)
 ```
 
+
+# LOGISTIC REGRESSION
+
+```{r}
+
+dc_l <- dc %>%
+  filter((ALIGN == "Bad Characters" | ALIGN == "Good Characters") & 
+           (SEX == "Female Characters" | SEX == "Male Characters"))
+
+l1 <- glm(data = dc_l, ALIGN ~ SEX, family = "binomial"(link = logit))
+
+summary(l1)
+
+post_l1 <- predict(l1, type = "response")
+
+ALIGN_pred <- ifelse(post_l1>0.5,  "Good", "Bad") 
+
+
+table(dc_l$ALIGN)
+table(ALIGN_pred)
+
+table(dc_l$ALIGN, ALIGN_pred)
+
+(2223+953)/5616
+
+```
 
 
 
