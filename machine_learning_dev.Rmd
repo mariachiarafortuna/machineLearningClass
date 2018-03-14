@@ -10,6 +10,7 @@ output:
 ```{r}
 library(dplyr)
 library(ggplot2)
+library(rpart)
 
 ```
 
@@ -27,6 +28,13 @@ max_year <- max(dc$YEAR, na.rm =T)
 dc <-  dc %>%
   mutate(active_years = max_year - YEAR) %>%
   arrange(desc(active_years))
+
+dc_class <- dc %>%
+  filter((ALIGN == "Bad Characters" | ALIGN == "Good Characters") & 
+           (SEX == "Female Characters" | SEX == "Male Characters")) %>%
+  na.omit
+
+
 ```
 
 
@@ -352,12 +360,9 @@ https://datascienceplus.com/perform-logistic-regression-in-r/
 
 ```{r}
 
-dc_l <- dc %>%
-  filter((ALIGN == "Bad Characters" | ALIGN == "Good Characters") & 
-           (SEX == "Female Characters" | SEX == "Male Characters")) %>%
-  na.omit
+dc_log <- dc_class
 
-l1 <- glm(data = dc_l, ALIGN ~ SEX, family = "binomial")
+l1 <- glm(data = dc_log, ALIGN ~ SEX, family = "binomial")
 
 summary(l1)
 
@@ -365,13 +370,13 @@ post_l1 <- predict(l1, type = "response")
 
 dc_l$ALIGN_pred <- ifelse(post_l1>0.5,  "Good Characters", "Bad  Characters") 
 
-misClasificError <- mean(ALIGN_pred != dc_l$ALIGN)
+misClasificError <- mean(ALIGN_pred != dc_log$ALIGN)
 print(paste('Accuracy',1-misClasificError))
 
-table(dc_l$ALIGN)
+table(dc_log$ALIGN)
 table(ALIGN_pred)
 
-table(dc_l$ALIGN, ALIGN_pred)
+table(dc_log$ALIGN, ALIGN_pred)
 
 
 ```
@@ -379,13 +384,13 @@ table(dc_l$ALIGN, ALIGN_pred)
 
 ```{r}
 
-ggp <- ggplot(data = dc_l, mapping = aes(x = active_years, y = ALIGN)) +
+ggp <- ggplot(data = dc_class, mapping = aes(x = active_years, y = ALIGN)) +
   geom_point(colour="blue") +
   #geom_line(mapping = aes(x = active_years, y = ALIGN), colour="red") +
   facet_wrap(facets = ~SEX)
 print(ggp)
 
-l2 <- glm(data = dc_l, ALIGN ~ SEX + active_years, family = "binomial")
+l2 <- glm(data = dc_class, ALIGN ~ SEX + active_years, family = "binomial")
 
 summary(l2)
 
@@ -393,22 +398,121 @@ post_l2 <- predict(l2, type = "response")
 
 ALIGN_pred_l2 <- ifelse(post_l2>0.5,  "Good Characters", "Bad  Characters") 
 
-misClasificError <- mean(ALIGN_pred_l2 != dc_l$ALIGN)
+misClasificError <- mean(ALIGN_pred_l2 != dc_class$ALIGN)
 print(paste('Accuracy',1-misClasificError))
 
-table(dc_l$ALIGN, ALIGN_pred_l2)
+table(dc_class$ALIGN, ALIGN_pred_l2)
 
 anova(l2, test="Chisq")
 
 ```
 
 
+```{r}
+l3 <- glm(data = dc_class, ALIGN ~ SEX + active_years + APPEARANCES, family = "binomial")
+
+summary(l3)
+
+post_l3 <- predict(l3, type = "response")
+
+ALIGN_pred_l3 <- ifelse(post_l3>0.5,  "Good Characters", "Bad  Characters") 
+
+misClasificError <- mean(ALIGN_pred_l3 != dc_class$ALIGN)
+print(paste('Accuracy',1-misClasificError))
+
+table(dc_class$ALIGN, ALIGN_pred_l3)
+
+anova(l3, test="Chisq")
+```
+
+
+
 # DECISION TREE
+
+
+```{r}
+library(rpart)
+
+table(iris$Species)
+
+
+iris_tree <- rpart(Species ~ ., method = "class", data = iris)
+
+print(iris_tree)
+
+summary(iris_tree)
+
+plot(iris_tree, compress = T, margin = 0.2, branch = 0.3)
+text(iris_tree, use.n = T, digits = 3, cex = 0.8)
+
+printcp(iris_tree)
+
+iris_pred <- predict(iris_tree, type = "class")
+
+table(iris_pred, iris$Species)
+
+misClasificError <- mean(iris_pred != iris$Species)
+print(paste('Accuracy',1-misClasificError))
+
+```
+
+
+
 
 ```{r}
 
-?rpart
-dc_l
+align_tree <- rpart(ALIGN ~ SEX + active_years + APPEARANCES, method = "class", data = dc_class) 
+
+summary(align_tree)
+
+# require(rpart.plot)
+# require(rattle)
+# fancyRpartPlot(al)
+
+
+plot(align_tree, uniform = T, compress = T, margin = 0.2, branch = 0.3)
+text(align_tree, use.n = T, digits = 3, cex = 0.6)
+
+align_pred_tree <- predict(align_tree, type = "class")
+
+table(align_pred_tree, dc_class$ALIGN)
+
+misClasificError <- mean(align_pred_tree != dc_class$ALIGN)
+print(paste('Accuracy',1-misClasificError))
+
+
+```
+
+
+# Training and test dataset
+
+```{r}
+train <- sample(nrow(dc_class), 4800)
+dc_train <- dc_class[train,]
+dc_test <- dc_class[-train,]
+```
+
+
+
+# Random Forest
+
+```{r}
+require(randomForest)
+set.seed(1000)
+
+(rf_fit <- randomForest(x = dc_train[ , c("APPEARANCES","SEX", "active_years")], 
+                        y = dc_train[ , "ALIGN"],
+                        xtest = dc_test[ , c("APPEARANCES","SEX", "active_years")], 
+                        ytest = dc_test[ , "ALIGN"],
+                        cutoff = c(0.8, 0.2)))
+
+
+set.seed(71)
+iris.rf <- randomForest(Species ~ ., data=iris, importance=TRUE,
+                        proximity=TRUE)
+print(iris.rf)
+## Look at variable importance:
+round(importance(iris.rf), 2)
 
 ```
 
