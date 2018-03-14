@@ -189,6 +189,24 @@ ggplot(data=perc_ys, aes(x = YEAR, y = perc, fill = SEX)) +
 
 
 
+###  Pie chart
+
+```{r}
+
+eye_tab <- dc %>%
+  filter(EYE != "") %>%
+  group_by(EYE) %>%
+  summarize(count = n())
+
+ ggplot(data=eye_tab, 
+       aes(x=factor(1), y = count, fill = factor(EYE))) +
+   geom_bar(width = 1, stat = "identity") +
+   coord_polar(theta = "y")
+
+```
+
+
+
 ### Scatterplot 
 
 
@@ -368,7 +386,7 @@ summary(l1)
 
 post_l1 <- predict(l1, type = "response")
 
-dc_l$ALIGN_pred <- ifelse(post_l1>0.5,  "Good Characters", "Bad  Characters") 
+ALIGN_pred <- ifelse(post_l1>0.5,  "Good Characters", "Bad  Characters") 
 
 misClasificError <- mean(ALIGN_pred != dc_log$ALIGN)
 print(paste('Accuracy',1-misClasificError))
@@ -498,22 +516,22 @@ dc_test <- dc_class[-train,]
 # Random Forest
 
 ```{r}
-require(randomForest)
-set.seed(1000)
-
-(rf_fit <- randomForest(x = dc_train[ , c("APPEARANCES","SEX", "active_years")], 
-                        y = dc_train[ , "ALIGN"],
-                        xtest = dc_test[ , c("APPEARANCES","SEX", "active_years")], 
-                        ytest = dc_test[ , "ALIGN"],
-                        cutoff = c(0.8, 0.2)))
-
-
-set.seed(71)
-iris.rf <- randomForest(Species ~ ., data=iris, importance=TRUE,
-                        proximity=TRUE)
-print(iris.rf)
-## Look at variable importance:
-round(importance(iris.rf), 2)
+# require(randomForest)
+# set.seed(1000)
+# 
+# (rf_fit <- randomForest(x = dc_train[ , c("APPEARANCES","SEX", "active_years")], 
+#                         y = dc_train[ , "ALIGN"],
+#                         xtest = dc_test[ , c("APPEARANCES","SEX", "active_years")], 
+#                         ytest = dc_test[ , "ALIGN"],
+#                         cutoff = c(0.8, 0.2)))
+# 
+# 
+# set.seed(71)
+# iris.rf <- randomForest(Species ~ ., data=iris, importance=TRUE,
+#                         proximity=TRUE)
+# print(iris.rf)
+# ## Look at variable importance:
+# round(importance(iris.rf), 2)
 
 ```
 
