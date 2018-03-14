@@ -21,6 +21,12 @@ marvel <- file.path("data", "marvel-wikia-data.csv") %>%
 
 dc <-  file.path("data", "dc-wikia-data.csv") %>%
   read.csv()
+
+max_year <- max(dc$YEAR, na.rm =T)
+
+dc <-  dc %>%
+  mutate(active_years = max_year - YEAR) %>%
+  arrange(desc(active_years))
 ```
 
 
@@ -203,6 +209,28 @@ ggplot(data = dc %>% filter(APPEARANCES<500 & APPEARANCES>20), aes(x = YEAR, y =
 
 ### Simple linear regression
 
+
+### Easy ex
+
+```{r}
+ggplot(data = cars, aes(x = dist, y = speed)) +
+  geom_point() +
+  geom_smooth(method='lm',formula=y~x)
+
+m1 <- lm(data = cars, speed ~ dist)
+
+summary(m1)
+
+residuals(m1)
+predict(m1)
+
+plot(m1)
+```
+
+
+### Comics example
+
+
 ```{r}
 dc_small <- dc %>%
   filter(APPEARANCES >20) 
@@ -228,6 +256,28 @@ plot(m1)
 
 ```
 
+### Multiple linear regression
+
+```{r}
+
+m3 <- lm(data=dc, APPEARANCES ~ active_years + ALIGN)
+
+summary(m3)
+
+plot(m3)
+
+```
+
+
+```{r}
+m4 <- lm(data=dc, APPEARANCES ~ active_years + ALIGN + active_years*ALIGN)
+
+summary(m4)
+
+plot(m4)
+```
+
+
 
 ### Log-level regression
 
@@ -235,15 +285,15 @@ http://www.cazaar.com/ta/econ113/interpreting-beta
 
 
 ```{r}
-dc_small %>%
+dc %>%
   ggplot(aes(x = APPEARANCES)) +
-  geom_bar()
+  geom_density()
 ```
 
 ```{r}
-dc_small %>%
+dc %>%
   ggplot(aes(x = log(APPEARANCES))) +
-  geom_bar()
+  geom_density()
 ```
 
 
@@ -257,17 +307,18 @@ dc %>%
 
 ```{r}
 
-m2 <- lm(data=dc, log(APPEARANCES) ~ active_years)
+m2_l <- lm(data=dc, log(APPEARANCES) ~ active_years)
 
-summary(m2)
+summary(m2_l)
 
-plot(m2)
+plot(m2_l)
 
 ```
 
 Se aggiungiamo un altro anno di attività, ci aspettiamo che il numero di apparizioni cresca del 3%
 
-### Multiple linear regression
+
+
 
 ```{r}
 
@@ -297,29 +348,67 @@ plot(m4)
 
 # LOGISTIC REGRESSION
 
+https://datascienceplus.com/perform-logistic-regression-in-r/
+
 ```{r}
 
 dc_l <- dc %>%
   filter((ALIGN == "Bad Characters" | ALIGN == "Good Characters") & 
-           (SEX == "Female Characters" | SEX == "Male Characters"))
+           (SEX == "Female Characters" | SEX == "Male Characters")) %>%
+  na.omit
 
-l1 <- glm(data = dc_l, ALIGN ~ SEX, family = "binomial"(link = logit))
+l1 <- glm(data = dc_l, ALIGN ~ SEX, family = "binomial")
 
 summary(l1)
 
 post_l1 <- predict(l1, type = "response")
 
-ALIGN_pred <- ifelse(post_l1>0.5,  "Good", "Bad") 
+dc_l$ALIGN_pred <- ifelse(post_l1>0.5,  "Good Characters", "Bad  Characters") 
 
+misClasificError <- mean(ALIGN_pred != dc_l$ALIGN)
+print(paste('Accuracy',1-misClasificError))
 
 table(dc_l$ALIGN)
 table(ALIGN_pred)
 
 table(dc_l$ALIGN, ALIGN_pred)
 
-(2223+953)/5616
 
 ```
 
 
+```{r}
+
+ggp <- ggplot(data = dc_l, mapping = aes(x = active_years, y = ALIGN)) +
+  geom_point(colour="blue") +
+  #geom_line(mapping = aes(x = active_years, y = ALIGN), colour="red") +
+  facet_wrap(facets = ~SEX)
+print(ggp)
+
+l2 <- glm(data = dc_l, ALIGN ~ SEX + active_years, family = "binomial")
+
+summary(l2)
+
+post_l2 <- predict(l2, type = "response")
+
+ALIGN_pred_l2 <- ifelse(post_l2>0.5,  "Good Characters", "Bad  Characters") 
+
+misClasificError <- mean(ALIGN_pred_l2 != dc_l$ALIGN)
+print(paste('Accuracy',1-misClasificError))
+
+table(dc_l$ALIGN, ALIGN_pred_l2)
+
+anova(l2, test="Chisq")
+
+```
+
+
+# DECISION TREE
+
+```{r}
+
+?rpart
+dc_l
+
+```
 
