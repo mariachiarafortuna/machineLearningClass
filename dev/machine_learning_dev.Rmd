@@ -11,16 +11,17 @@ output:
 library(dplyr)
 library(ggplot2)
 library(rpart)
+library(here)
 
 ```
 
 # DATA IMPORT
 
 ```{r}
-marvel <- file.path("data", "marvel-wikia-data.csv") %>%
+marvel <- file.path(here(), "data", "marvel-wikia-data.csv") %>%
   read.csv()
 
-dc <-  file.path("data", "dc-wikia-data.csv") %>%
+dc <-  file.path(here(), "data", "dc-wikia-data.csv") %>%
   read.csv()
 
 max_year <- max(dc$YEAR, na.rm =T)
