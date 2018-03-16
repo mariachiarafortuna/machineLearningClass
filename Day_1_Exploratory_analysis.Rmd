@@ -11,6 +11,13 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+
+
 # R basics
 
 ```{r}
@@ -74,3 +81,49 @@ table(dc$SEX)
 summary(dc)
 ```
 
+# Data manipulation
+
+```{r}
+
+dc_female <- dc %>%
+  filter(SEX == "Female Characters") %>%
+  select(name, SEX, ALIVE, APPEARANCES, YEAR) %>%
+  arrange(desc(APPEARANCES), YEAR)
+
+# write.csv(dc_female, "dc_female.csv")
+
+head(dc_female)
+
+```
+
+
+```{r}
+dc_female %>%
+  mutate(active_years = 2013 - YEAR) %>%
+  group_by(ALIVE) %>%
+  summarize(avg_year = mean(active_years, na.rm = T),
+            count = n())
+```
+
+
+# Data visualization
+
+## One categorical var
+
+```{r}
+ggplot(data = dc, aes(x = ALIGN)) +
+  geom_bar(fill = "red") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+```{r}
+
+g1 <- ggplot(data = dc, aes(x = ALIGN, fill = SEX)) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+library(plotly)
+
+ggplotly(g1)
+```
