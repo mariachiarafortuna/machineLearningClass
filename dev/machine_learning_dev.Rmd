@@ -22,7 +22,7 @@ marvel <- file.path(here(), "data", "marvel-wikia-data.csv") %>%
   read.csv()
 
 dc <-  file.path(here(), "data", "dc-wikia-data.csv") %>%
-  read.csv()
+  read.csv(na.string = "")
 
 max_year <- max(dc$YEAR, na.rm =T)
 
@@ -324,7 +324,6 @@ dc %>%
 ```
 
 
-
 ```{r}
 dc %>%
   ggplot(aes(x = active_years, y = log(APPEARANCES), col = ID)) +
@@ -534,5 +533,70 @@ dc_test <- dc_class[-train,]
 # ## Look at variable importance:
 # round(importance(iris.rf), 2)
 
+```
+
+
+# CLUSTER
+
+```{r}
+
+
+dc_full <- dc %>%
+  select(name, ALIGN, EYE, HAIR, SEX, ALIVE, APPEARANCES, active_years, YEAR) %>%
+  na.omit()
+
+dc_cluster <-dc_full %>%
+  select(active_years, APPEARANCES) %>%
+  scale() %>%
+  as.data.frame()
+
+
+# Finding cluster number through Within groups sum of squares
+wss <- (nrow(dc_cluster)-1)*sum(apply(dc_cluster,2,var))
+for (i in 2:15){
+  wss[i] <- sum(kmeans(dc_cluster, centers=i)$withinss)
+  }
+plot(1:15, wss, type="b", xlab="Number of Clusters", ylab="Within groups sum of squares")
+# Let's try 4
+
+set.seed(1234)
+
+# K-Means Cluster Analysis
+fit <- kmeans(dc_cluster, 4) # 4 cluster solution
+# append cluster assignment
+dc_full <- data.frame(dc_full, cluster = as.factor(fit$cluster))
+
+
+
+
+# CLUSTERS MEANS
+
+# Counts
+cluster_stats <- dc_full %>%
+  group_by(cluster) %>%
+  summarise(count = n(),
+            perc = paste0(round(n()/nrow(dc_full)*100,2),"%"),
+            avg_appear = mean(APPEARANCES),
+            avg_year = mean(active_years)) %>%
+  mutate(label = case_when(
+    cluster == 1 ~ "Stabili",
+    cluster == 2 ~ "Star",
+    cluster == 3 ~ "Comparse",
+    cluster == 4 ~ "Secondari"
+  ))
+
+dc_full <- dc_full %>%
+  mutate(label = case_when(
+    cluster == 1 ~ "Stabili",
+    cluster == 2 ~ "Star",
+    cluster == 3 ~ "Comparse",
+    cluster == 4 ~ "Secondari"
+  ))
+
+ggplot(data = dc_full, aes(x = active_years, y = APPEARANCES, col = label)) +
+  geom_point()
+
+dc_full %>%
+  filter(label == "Star")
 ```
 
