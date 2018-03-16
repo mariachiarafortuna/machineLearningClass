@@ -45,7 +45,7 @@ dc <- read.csv("data/dc-wikia-data.csv", na.string = "")
 # Data exploration - Basics
 
 ```{r}
-View(dc)
+# View(dc)
 
 str(dc)
 ```
