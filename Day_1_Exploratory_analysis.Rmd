@@ -1,0 +1,76 @@
+---
+title: "Exploratory Analysis"
+author: "Mariachiara Fortuna"
+date: "March 16, 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# R basics
+
+```{r}
+vec <- c(1, 2, 6)
+
+vec
+
+char_vec <- c("a", "b", "a", "a", "b")
+
+fac_vec <- as.factor(char_vec)
+
+```
+
+# Data import
+
+```{r}
+
+file_name <- file.path("data", "dc-wikia-data.csv")
+
+dc <- read.csv(file_name)
+
+dc <- read.csv("data/dc-wikia-data.csv", na.string = "")
+```
+
+# Data exploration - Basics
+
+```{r}
+View(dc)
+
+str(dc)
+```
+
+# Statistiche descrittive
+
+## Var quantitative
+
+```{r}
+
+min(dc$YEAR, na.rm = T)
+
+max(dc$YEAR, na.rm = T)
+
+range(dc$YEAR, na.rm = T)
+
+mean(dc$APPEARANCES, na.rm = T)
+
+sd(dc$APPEARANCES, na.rm = T)
+
+sum(is.na(dc$APPEARANCES)) # calcolo NA
+```
+
+## Var qualitative
+
+```{r}
+table(dc$SEX)
+```
+
+## Summary
+
+```{r}
+summary(dc)
+```
+
