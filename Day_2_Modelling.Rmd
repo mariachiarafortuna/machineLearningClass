@@ -105,3 +105,58 @@ m4 <- lm(data = dc_full, log(appear) ~ activity + ALIGN + activity*ALIGN)
 summary(m4)
 ```
 
+# Cluster Analysis
+
+```{r}
+dc_cluster <- dc_full %>%
+  select(appear, activity) %>%
+  scale() %>%
+  as.data.frame()
+```
+
+
+```{r}
+
+set.seed(1234)
+
+fit <- kmeans(dc_cluster, 4)
+
+cluster_num <- as.factor(fit$cluster)
+
+dc_full <- dc_full %>%
+  bind_cols(cluster_val = cluster_num)
+
+ggplot(data = dc_full, 
+       aes(x = activity, y = appear, 
+           col = as.factor(cluster_val))) +
+  geom_point()
+
+dc_full <- dc_full %>%
+  mutate(label = case_when(
+    cluster_val == 1 ~ "Star",
+    cluster_val == 2 ~ "Non protagonisti",
+    cluster_val == 3 ~ "Comparse",
+    cluster_val == 4 ~ "Protagonisti"),
+  label_fac = as.factor(label))
+
+```
+
+
+```{r}
+dc_full %>%
+  group_by(label_fac) %>%
+  summarise(
+    count = n(),
+    avg_appear = mean(appear, na.rm = T),
+    avg_activity = mean(activity, na.rm = T)
+  )
+```
+
+```{r}
+star_tab <- dc_full %>%
+  filter(label_fac == "Star")
+```
+
+
+
+
