@@ -1,0 +1,107 @@
+---
+title: "Day 2 - Modelling"
+author: "Mariachiara Fortuna"
+date: "March 17, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Libraries
+
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+
+# Data reading
+
+```{r}
+file_name <- file.path("data", "dc-wikia-data.csv")
+dc <- read.csv(file_name, na.strings = "")
+```
+
+
+# Data trasformation
+
+```{r}
+max_year <- max(dc$YEAR, na.rm = T)
+
+dc <- dc %>%
+  mutate(activity = max_year - YEAR,
+         appear = APPEARANCES)
+
+```
+
+
+# MODELING
+
+## Linear Regression
+
+```{r}
+
+dc_full <- dc %>%
+  select(name, appear, activity, SEX,
+         ALIGN, ALIVE) %>%
+  na.omit()
+
+m1 <- lm(data = dc_full, appear ~ activity)
+
+summary(m1)
+
+plot(m1)
+
+appear_residuals <- residuals(m1)
+
+appear_pred <- predict(m1)
+
+dc_lm <- dc_full %>%
+  bind_cols(appear_m1 = appear_pred)
+
+```
+
+
+```{r}
+m2 <- lm(data = dc_full, appear ~ activity + SEX)
+
+summary(m2)
+```
+
+Sex non risulta signficativamente associata ad appear
+
+```{r}
+m3 <- lm(data = dc_full, appear ~ activity + ALIGN)
+
+summary(m3)
+```
+
+
+```{r}
+m4 <- lm(data = dc_full, appear ~ activity + ALIGN + activity*ALIGN)
+
+summary(m4)
+```
+
+
+```{r}
+ggplot(data = dc_full, aes(x = activity, y = appear)) +
+  geom_point()
+```
+
+```{r}
+ggplot(data = dc_full, aes(x = appear)) +
+  geom_density()
+
+ggplot(data = dc_full, aes(x = log(appear))) +
+  geom_density()
+```
+
+```{r}
+m4 <- lm(data = dc_full, log(appear) ~ activity + ALIGN + activity*ALIGN)
+
+summary(m4)
+```
+
