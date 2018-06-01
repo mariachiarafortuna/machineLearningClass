@@ -166,7 +166,7 @@ plot(m3)
 ```
 
 Se aggiungiamo un altro anno di attività, ci aspettiamo che il numero di apparizioni cresca del 3%.
-Se il personaggio è cattivo, però, ci aspettiamo un decremento del numero di apparizioni del 17%, mentre se è buono un incremento del 47%.
+
 
 https://www.youtube.com/watch?v=wXC2kViEGz8
 
